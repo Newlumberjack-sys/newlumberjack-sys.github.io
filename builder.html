@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Flushy Community - Ultimate Page Builder</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: rgb(0,232,255);
+      background: -moz-linear-gradient(162deg, rgba(0,232,255,0.77) 0%, rgba(149,9,213,0.47) 61%, rgba(255,171,0,0.63) 100%);
+      background: -webkit-linear-gradient(162deg, rgba(0,232,255,0.77) 0%, rgba(149,9,213,0.47) 61%, rgba(255,171,0,0.63) 100%);
+      background: linear-gradient(162deg, rgba(0,232,255,0.77) 0%, rgba(149,9,213,0.47) 61%, rgba(255,171,0,0.63) 100%);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-attachment: fixed;
+      color: white;
+    }
+    .navbar {
+      background: rgba(0,0,0,0.8);
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .navbar a {
+      text-decoration: none;
+      color: white;
+      margin: 10px 15px;
+      display: flex;
+      align-items: center;
+      font-size: 16px;
+    }
+    .navbar a img {
+      width: 40px;
+      height: 40px;
+      margin-right: 5px;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+    }
+    .sidebar {
+      flex: 0 0 280px;
+      background: rgba(0,0,0,0.5);
+      border: 2px solid white;
+      border-radius: 25px;
+      padding: 20px;
+      height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+    .sidebar h2 { margin-bottom: 15px; font-size: 18px; }
+    .sidebar button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid white;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .sidebar button:hover { background: rgba(255,255,255,0.4); }
+    .builder-main {
+      flex: 1;
+      background: rgba(0,0,0,0.3);
+      border: 2px solid white;
+      border-radius: 25px;
+      padding: 20px;
+      min-height: calc(100vh - 160px);
+      position: relative;
+      overflow: auto;
+    }
+    .block {
+      border: 1px solid white;
+      background: rgba(0,0,0,0.3);
+      position: absolute;
+      min-width: 100px;
+      min-height: 50px;
+      padding: 5px;
+      resize: both;
+      overflow: auto;
+    }
+    .block .block-header {
+      background: rgba(0,0,0,0.6);
+      padding: 5px;
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+      cursor: move;
+    }
+    .block .block-header button {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      padding: 3px 5px;
+      margin-left: 5px;
+      color: white;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .block .block-content {
+      padding: 10px;
+      cursor: text;
+    }
+    .preview .block .block-header { display: none; }
+    @media (max-width: 768px) {
+      .navbar { flex-direction: column; }
+      .container { flex-direction: column; }
+    }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js" integrity="sha512-cs9cnQhYSOk2k2iF6uhqFjScZ8V8T+f8NRAwLsmTqT6/7i6GHLrxmH4+yv+zKGcmlsK3bqJ2Lbw8aXkPhmCjiw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="https://cdn.jsdelivr.net/npm/interactjs/dist/interact.min.js"></script>
+</head>
+<body>
+  <header class="navbar">
+    <a href="index.html"><img src="logo.png" alt="Logo">Home</a>
+    <a href="builder.html"><img src="builder.png" alt="Builder">Page Builder</a>
+    <a href="#"><img src="staff.png" alt="Staff">Staff</a>
+  </header>
+  
+  <div class="container">
+    <div class="sidebar">
+      <h2>Add Block</h2>
+      <button onclick="addBlock('heading')">Heading</button>
+      <button onclick="addBlock('paragraph')">Paragraph</button>
+      <button onclick="addBlock('image')">Image</button>
+      <button onclick="addBlock('video')">Video</button>
+      <button onclick="addBlock('audio')">Audio</button>
+      <button onclick="addBlock('code')">Code</button>
+      <button onclick="addBlock('html')">HTML</button>
+      <button onclick="addBlock('quote')">Quote</button>
+      <button onclick="addBlock('button')">Button</button>
+      <button onclick="addBlock('divider')">Divider</button>
+      <button onclick="addBlock('file')">File</button>
+    </div>
+    <div class="builder-main">
+      <div class="buttons" style="margin-bottom:10px;">
+        <button onclick="togglePreview()">Toggle Preview</button>
+        <button onclick="clearPage()">Clear</button>
+      </div>
+      <div class="page-content" id="builderArea">
+        <!-- Blocks will be inserted here -->
+      </div>
+    </div>
+  </div>
+  
+  <div class="footer" style="text-align:center; margin-top:20px;">
+    <button onclick="exportHTML()" style="padding:10px 15px; background:rgba(255,255,255,0.2); border:1px solid white; border-radius:5px; color:white; cursor:pointer;">Export HTML</button>
+  </div>
+  
+  <script>
+    let isPreview = false;
+    document.addEventListener('DOMContentLoaded', () => {
+      const builderArea = document.getElementById('builderArea');
+      Sortable.create(builderArea, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        onEnd: autoSave
+      });
+      // Load saved content if available
+      const saved = localStorage.getItem('builderContent');
+      if (saved) {
+        builderArea.innerHTML = saved;
+        document.querySelectorAll('.block').forEach(el => applyInteract(el));
+      }
+    });
+    function autoSave() {
+      const builderArea = document.getElementById('builderArea');
+      localStorage.setItem('builderContent', builderArea.innerHTML);
+    }
+    function applyInteract(el) {
+      interact(el)
+        .draggable({
+          listeners: {
+            move (event) {
+              const target = event.target;
+              const x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx;
+              const y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+              target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+              target.setAttribute('data-x', x);
+              target.setAttribute('data-y', y);
+              autoSave();
+            }
+          }
+        })
+        .resizable({
+          edges: { left: true, right: true, bottom: true, top: true },
+          listeners: {
+            move (event) {
+              const target = event.target;
+              let x = (parseFloat(target.getAttribute('data-x')) || 0);
+              let y = (parseFloat(target.getAttribute('data-y')) || 0);
+              target.style.width = event.rect.width + 'px';
+              target.style.height = event.rect.height + 'px';
+              x += event.deltaRect.left;
+              y += event.deltaRect.top;
+              target.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+              target.setAttribute('data-x', x);
+              target.setAttribute('data-y', y);
+              autoSave();
+            }
+          }
+        });
+    }
+    function createBlock(type) {
+      const block = document.createElement('div');
+      block.className = 'block';
+      block.setAttribute('data-type', type);
+      block.style.position = 'absolute';
+      block.style.top = '10px';
+      block.style.left = '10px';
+      const header = document.createElement('div');
+      header.className = 'block-header';
+      const dragHandle = document.createElement('span');
+      dragHandle.className = 'drag-handle';
+      dragHandle.innerHTML = '&#9776;';
+      header.appendChild(dragHandle);
+      const btnDuplicate = document.createElement('button');
+      btnDuplicate.innerText = 'Duplicate';
+      btnDuplicate.onclick = () => {
+        const clone = block.cloneNode(true);
+        clone.removeAttribute('data-x');
+        clone.removeAttribute('data-y');
+        block.parentNode.insertBefore(clone, block.nextSibling);
+        applyInteract(clone);
+        autoSave();
+      };
+      header.appendChild(btnDuplicate);
+      const btnEdit = document.createElement('button');
+      btnEdit.innerText = 'Edit';
+      btnEdit.onclick = () => {
+        const contentDiv = block.querySelector('.block-content');
+        if (type === 'image' || type === 'video' || type === 'audio') {
+          let sel = type === 'image' ? 'img' : (type === 'video' ? 'iframe' : 'audio');
+          const mediaElem = contentDiv.querySelector(sel);
+          const newUrl = prompt('Enter new URL:', mediaElem ? mediaElem.src : '');
+          if (newUrl && mediaElem) {
+            mediaElem.src = newUrl;
+            if (type === 'audio') {
+              const sourceElem = mediaElem.querySelector('source');
+              if (sourceElem) {
+                sourceElem.src = newUrl;
+                mediaElem.load();
+              }
+            }
+            autoSave();
+          }
+        } else if (type === 'file') {
+          const fileLink = contentDiv.querySelector('a');
+          const newUrl = prompt('Enter file URL:', fileLink ? fileLink.href : '');
+          if (newUrl && fileLink) {
+            fileLink.href = newUrl;
+            fileLink.innerText = newUrl.split('/').pop();
+            autoSave();
+          }
+        } else if (type === 'button') {
+          const btn = contentDiv.querySelector('button');
+          const newText = prompt('Enter button text:', btn.innerText);
+          const newLink = prompt('Enter button link URL:', btn.getAttribute('data-link') || '');
+          if (newText && newLink) {
+            btn.innerText = newText;
+            btn.setAttribute('data-link', newLink);
+            btn.onclick = () => window.open(newLink, '_blank');
+            autoSave();
+          }
+        } else {
+          if (contentDiv.getAttribute('contenteditable') === 'true') {
+            contentDiv.removeAttribute('contenteditable');
+            btnEdit.innerText = 'Edit';
+            autoSave();
+          } else {
+            contentDiv.setAttribute('contenteditable', 'true');
+            contentDiv.focus();
+            btnEdit.innerText = 'Done';
+          }
+        }
+      };
+      header.appendChild(btnEdit);
+      if (['heading','paragraph','code','html','quote'].includes(type)) {
+        const btnStyle = document.createElement('button');
+        btnStyle.innerText = 'Style';
+        btnStyle.onclick = () => {
+          const contentDiv = block.querySelector('.block-content');
+          const newColor = prompt('Enter text color (e.g., #ff0000 or red):', contentDiv.style.color || '');
+          if (newColor !== null) { contentDiv.style.color = newColor; }
+          const newFont = prompt('Enter font family (e.g., Arial):', contentDiv.style.fontFamily || '');
+          if (newFont !== null) { contentDiv.style.fontFamily = newFont; }
+          autoSave();
+        };
+        header.appendChild(btnStyle);
+      }
+      const btnDelete = document.createElement('button');
+      btnDelete.innerText = 'Delete';
+      btnDelete.onclick = () => { if (confirm('Delete this block?')) { block.remove(); autoSave(); } };
+      header.appendChild(btnDelete);
+      block.appendChild(header);
+      const content = document.createElement('div');
+      content.className = 'block-content';
+      switch (type) {
+        case 'heading': {
+          const h2 = document.createElement('h2');
+          h2.innerText = 'Heading Text';
+          content.appendChild(h2);
+          break;
+        }
+        case 'paragraph': {
+          const p = document.createElement('p');
+          p.innerText = 'Enter your paragraph text here...';
+          content.appendChild(p);
+          break;
+        }
+        case 'image': {
+          const img = document.createElement('img');
+          img.src = 'https://via.placeholder.com/600x300';
+          img.style.maxWidth = '100%';
+          content.appendChild(img);
+          break;
+        }
+        case 'video': {
+          const iframe = document.createElement('iframe');
+          iframe.src = 'https://www.youtube.com/embed/dQw4w9WgXcQ';
+          iframe.width = '100%';
+          iframe.height = '315';
+          iframe.frameBorder = '0';
+          iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+          iframe.allowFullscreen = true;
+          content.appendChild(iframe);
+          break;
+        }
+        case 'audio': {
+          const audio = document.createElement('audio');
+          audio.controls = true;
+          const source = document.createElement('source');
+          source.src = 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+          source.type = 'audio/mpeg';
+          audio.appendChild(source);
+          content.appendChild(audio);
+          break;
+        }
+        case 'code': {
+          const pre = document.createElement('pre');
+          const code = document.createElement('code');
+          code.innerText = '// Your code here...';
+          pre.appendChild(code);
+          content.appendChild(pre);
+          break;
+        }
+        case 'html': {
+          const div = document.createElement('div');
+          div.innerText = '<!-- Enter your HTML here -->';
+          div.style.fontFamily = 'monospace';
+          content.appendChild(div);
+          break;
+        }
+        case 'quote': {
+          const blockquote = document.createElement('blockquote');
+          blockquote.innerText = 'Your quote here...';
+          content.appendChild(blockquote);
+          break;
+        }
+        case 'button': {
+          const btn = document.createElement('button');
+          btn.innerText = 'Click Me';
+          btn.setAttribute('data-link', 'https://example.com');
+          btn.onclick = () => window.open(btn.getAttribute('data-link'), '_blank');
+          content.appendChild(btn);
+          break;
+        }
+        case 'divider': {
+          const hr = document.createElement('hr');
+          content.appendChild(hr);
+          break;
+        }
+        case 'file': {
+          const input = document.createElement('input');
+          input.type = 'file';
+          input.onchange = () => {
+            const file = input.files[0];
+            if (file) {
+              const fileLink = document.createElement('a');
+              fileLink.href = URL.createObjectURL(file);
+              fileLink.innerText = file.name;
+              fileLink.target = '_blank';
+              content.innerHTML = '';
+              content.appendChild(fileLink);
+              autoSave();
+            }
+          };
+          content.appendChild(input);
+          break;
+        }
+        default: { content.innerText = 'Unsupported block type.'; }
+      }
+      block.appendChild(content);
+      applyInteract(block);
+      autoSave();
+      return block;
+    }
+    function addBlock(type) {
+      const newBlock = createBlock(type);
+      document.getElementById('builderArea').appendChild(newBlock);
+      autoSave();
+    }
+    function togglePreview() {
+      isPreview = !isPreview;
+      const builderArea = document.getElementById('builderArea');
+      if (isPreview) { builderArea.classList.add('preview'); }
+      else { builderArea.classList.remove('preview'); }
+      autoSave();
+    }
+    function clearPage() {
+      if (confirm('Clear all blocks?')) {
+        document.getElementById('builderArea').innerHTML = '';
+        autoSave();
+      }
+    }
+    function exportHTML() {
+      const builderArea = document.getElementById('builderArea');
+      const exported = builderArea.innerHTML;
+      const newWindow = window.open('', '_blank');
+      newWindow.document.write('<pre>' + exported.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</pre>');
+      newWindow.document.close();
+    }
+    document.getElementById('builderArea').addEventListener('input', autoSave);
+  </script>
+</body>
+</html>
