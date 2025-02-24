@@ -121,7 +121,6 @@
   <header class="navbar">
     <a href="index.html"><img src="https://res.cloudinary.com/dssp7e0gr/image/upload/v1739292605/home_ojrdji.png" alt="Logo">Home</a>
     <a href="builder.html"><img src="https://res.cloudinary.com/dssp7e0gr/image/upload/v1739292603/warning_w4t16t.png" alt="Builder">Page Builder</a>
-    <a href="#"><img src="staff.png" alt="Staff">Staff</a>
   </header>
   
   <div class="container">
@@ -145,7 +144,6 @@
         <button onclick="clearPage()">Clear</button>
       </div>
       <div class="page-content" id="builderArea">
-        <!-- Blocks will be inserted here -->
       </div>
     </div>
   </div>
@@ -164,7 +162,6 @@
         ghostClass: 'sortable-ghost',
         onEnd: autoSave
       });
-      // Load saved content if available
       const saved = localStorage.getItem('builderContent');
       if (saved) {
         builderArea.innerHTML = saved;
